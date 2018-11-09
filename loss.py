@@ -16,7 +16,7 @@ class stAttentionLoss(nn.Module):
     def __init__(self, lambda_1 = 0.1, lambda_2 = 0.01):
         super(stAttentionLoss, self).__init__()
         self.lambda_1 = lambda_1
-        self.lambda_2  =lambda_2
+        self.lambda_2 = lambda_2
 
     """
     Forward Method 
@@ -31,7 +31,7 @@ class stAttentionLoss(nn.Module):
     @return: loss Tensor scalar
     """
     def forward(self, inputs, target, alpha, beta):
-        alpha = torch.squeeze(alpha,dim=2)
+        alpha = torch.squeeze(alpha,dim = 2)
         penalty_1 = self.lambda_1 * torch.sum(1 - torch.sum(alpha,dim = 0), dim = 0)
         
         beta_norm = torch.abs(beta) # Here should be norm |beta_{t}| #(seq_length, 1)
@@ -50,7 +50,7 @@ label = torch.LongTensor([0])
 
 attn_weights = np.zeros((20,196))
 for i in range(20):
-    attn_weights[i] = np.array([1/196]*196)
+    attn_weights[i] = np.array([1 / 196] * 196)
 attn_weights = torch.Tensor(attn_weights)
 attn_weights = torch.unsqueeze(attn_weights,dim = 2)
 print(attn_weights.size())
@@ -78,7 +78,9 @@ betas = torch.Tensor([[0.0501],
 print(betas.size())
 ##########################################
 
-myLoss = stAttentionLoss(0.1,0.01)
+myLoss = stAttentionLoss(0.1, 0.01)
 loss = myLoss(input, label, attn_weights, betas)
 
 #loss.backward() # Need Gradient
+
+# EOF
