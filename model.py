@@ -60,7 +60,7 @@ class stDecoder(nn.Module):
 
         output=self.fc(output)
 
-        return output, hc1, hc2, beta.view(-1)
+        return output, hc1, hc2, beta.view(-1), attn_weights
 
 
 
@@ -79,15 +79,18 @@ hc2=hc1
 
 outputs=[]
 betas=[]
-
+alphas=[]
 for i, x in enumerate(oneVideo):
-    output, hc1, hc2, beta=myDecoder(x, hc1, hc2)
+    output, hc1, hc2, beta, alpha=myDecoder(x, hc1, hc2)
     outputs.append(output)
     betas.append(beta)
+    alphas.append(alpha)
 
 outputs=torch.stack(outputs,dim=0) #(seq_length, 1, nClasses)
 
 betas=torch.stack(betas,dim=0)     #(seq_length, 1)
+
+alphas=torch.stack(alphas, dim=0)  #(seq_length, 196, 1)
 
 outputs=torch.squeeze(outputs,dim=1) #(seq_length, nClasses)
 
@@ -96,7 +99,5 @@ final=torch.mul(betas, outputs)      #(seq_length, nClasses)
 final=torch.sum(final, dim=0, keepdim=True)
 print("final.size()", final.size() )
 
-final=F.softmax(final, dim=1)
-print("final.size()", final.size() )
 
 
