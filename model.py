@@ -11,8 +11,8 @@ class stDecoder(nn.Module):
         self.nClasses=nClasses
         self.initc=nn.Linear(512,self.hiddenSize)
         self.inith=nn.Linear(512,self.hiddenSize)
-        self.sAtten=nn.Linear(self.hiddenSize*self.nLayers+512, 1)
-        self.tAtten=nn.Linear(self.hiddenSize*self.nLayers, 1)
+        self.sAtten=nn.Linear(self.hiddenSize+512, 1)
+        self.tAtten=nn.Linear(self.hiddenSize, 1)
         self.lstm1=nn.LSTMCell(512, self.hiddenSize)
         self.lstm2=nn.LSTMCell(self.hiddenSize,self.hiddenSize)
         self.tanh=nn.Tanh()
@@ -33,18 +33,19 @@ class stDecoder(nn.Module):
         # hc1 is a (h,c) of the 1st hidden layer of LSTM
         # h is hideen state, c is cell state
 
-        hidden=torch.cat((hc1[0],hc2[0]),dim=1) #(1, 2*hiddenSize)
+        hidden=hc2[0]   #(1, hiddenSize)
 
-        hidden=hidden.view(-1)  # flatten hidden 
+        beta=self.relu(self.tAtten( hidden ) ) 
 
+        hidden=hidden.view(-1)  # flatten hidden      
 
-        expandedHidden=torch.stack([hidden]*196, dim=0) #(196, num_layers* hidden_size)
+        expandedHidden=torch.stack([hidden]*196, dim=0) #(196, hidden_size)
 
-        output=torch.cat((expandedHidden,torch.t(x)),dim=1)  # 196 x (num_layers* hidden_size +512)
+        sAttenInput=torch.cat((expandedHidden,torch.t(x)), dim=1)  # 196 x (hidden_size +512)
         
-        output=self.sAtten(output)                      # (196, 1)
+        energy=self.sAtten(sAttenInput)                      # (196, 1)
         
-        attn_weights=F.softmax(output,dim=0)            # (196, 1)
+        attn_weights=F.softmax(energy,dim=0)            # (196, 1)
         
         attn_applied=torch.mul(attn_weights, torch.t(x)) # (196,512)
 
@@ -59,27 +60,43 @@ class stDecoder(nn.Module):
 
         output=self.fc(output)
 
-        hidden=torch.cat((hc1[0],hc2[0]),dim=1)
-        beta=self.relu( self.tAtten(hidden))
-
-        return output, hc1, hc2, beta
+        return output, hc1, hc2, beta.view(-1)
 
 
 
 
 
 
-###############
+##########################################
 myDecoder=stDecoder(256,2,10)
 
 x=torch.randn(512,196)
-oneVideo=[x]*10
+oneVideo=[x]*20
 
 hc1=myDecoder.initHidden(x)
 hc2=hc1
 
+
 outputs=[]
-beta=[]
+betas=[]
 
 for i, x in enumerate(oneVideo):
-    outputs[i], hc1, hc2, beta[i]=myDecoder(x, hc1, hc2)
+    output, hc1, hc2, beta=myDecoder(x, hc1, hc2)
+    outputs.append(output)
+    betas.append(beta)
+
+outputs=torch.stack(outputs,dim=0) #(seq_length, 1, nClasses)
+
+betas=torch.stack(betas,dim=0)     #(seq_length, 1)
+
+outputs=torch.squeeze(outputs,dim=1) #(seq_length, nClasses)
+
+final=torch.mul(betas, outputs)      #(seq_length, nClasses)
+
+final=torch.sum(final, dim=0, keepdim=True)
+print("final.size()", final.size() )
+
+final=F.softmax(final, dim=1)
+print("final.size()", final.size() )
+
+
