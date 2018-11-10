@@ -6,6 +6,7 @@ import numpy as np
 
 
 
+
 def main():
 	myDecoder=stDecoder(256,2,10)
 	myLoss = stAttentionLoss(0.1, 0.01)
@@ -19,6 +20,8 @@ def main():
 		video=torch.from_numpy(video)
 		hc1=myDecoder.initHidden(video)
 		hc2=hc1
+
+	for vidoe in videos:
 		outputs=[]
 		betas=[]
 		alphas=[]
@@ -39,6 +42,7 @@ def main():
 		print(label.size())
 		loss = myLoss(final, label, alphas, betas)
 		print("%d, loss:%f" % (i,loss.cpu().detach().numpy()))
+		loss = myLoss(final, label, alphas, betas)
 		loss.backward()
 		optimizer.step()
 
@@ -58,5 +62,9 @@ def main():
 
 
 
+<<<<<<< HEAD
 if __name__== "__main__":
+=======
+if __name__= "__main__":
+>>>>>>> ae35ed6ec0c4915858839edc203a9e09b3330dce
 	main()

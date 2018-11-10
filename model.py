@@ -70,6 +70,7 @@ class stDecoder(nn.Module):
 
 
 ##########################################
+
 # myDecoder=stDecoder(256,2,10)
 
 # x=torch.randn(512,196)
@@ -100,6 +101,7 @@ class stDecoder(nn.Module):
 
 # final=torch.sum(final, dim=0, keepdim=True)
 # print("final.size()", final.size() )
+
 
 
 

@@ -36,10 +36,12 @@ class stAttentionLoss(nn.Module):
         
         beta_norm = torch.abs(beta) # Here should be norm |beta_{t}| #(seq_length, 1)
         penalty_2 = self.lambda_1 * torch.sum(beta_norm) # Here should be summing over dim=0
+
         # using cross entropy means have softmax inside loss, DO NOT add softmax at the end of model?
         return F.cross_entropy(inputs,target) + penalty_1 + penalty_2
 
 ###################
+
 
 # input = np.array([[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]])
 # input = np.reshape(input,(1,10))
@@ -79,7 +81,3 @@ class stAttentionLoss(nn.Module):
 
 # myLoss = stAttentionLoss(0.1, 0.01)
 # loss = myLoss(input, label, attn_weights, betas)
-
-#loss.backward() # Need Gradient
-
-# EOF
