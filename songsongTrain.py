@@ -20,8 +20,6 @@ def main():
 		video=torch.from_numpy(video)
 		hc1=myDecoder.initHidden(video)
 		hc2=hc1
-
-	for vidoe in videos:
 		outputs=[]
 		betas=[]
 		alphas=[]
