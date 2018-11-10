@@ -21,6 +21,8 @@ class stDecoder(nn.Module):
 
     def initHidden(self,x):
         # x is the first flattend feature rectangel of a video
+        x=x[0]
+        #print(x.size())
         x=torch.mean(x,dim=1,keepdim=True) #(512, 1)
         x=torch.t(x)                       #(1, 512)
         c0=self.initc(x)                   #(1, hiddenSize)
@@ -68,36 +70,36 @@ class stDecoder(nn.Module):
 
 
 ##########################################
-myDecoder=stDecoder(256,2,10)
+# myDecoder=stDecoder(256,2,10)
 
-x=torch.randn(512,196)
-oneVideo=[x]*20
+# x=torch.randn(512,196)
+# oneVideo=[x]*20
 
-hc1=myDecoder.initHidden(x)
-hc2=hc1
+# hc1=myDecoder.initHidden(x)
+# hc2=hc1
 
 
-outputs=[]
-betas=[]
-alphas=[]
-for i, x in enumerate(oneVideo):
-    output, hc1, hc2, beta, alpha=myDecoder(x, hc1, hc2)
-    outputs.append(output)
-    betas.append(beta)
-    alphas.append(alpha)
+# outputs=[]
+# betas=[]
+# alphas=[]
+# for i, x in enumerate(oneVideo):
+#     output, hc1, hc2, beta, alpha=myDecoder(x, hc1, hc2)
+#     outputs.append(output)
+#     betas.append(beta)
+#     alphas.append(alpha)
 
-outputs=torch.stack(outputs,dim=0) #(seq_length, 1, nClasses)
+# outputs=torch.stack(outputs,dim=0) #(seq_length, 1, nClasses)
 
-betas=torch.stack(betas,dim=0)     #(seq_length, 1)
+# betas=torch.stack(betas,dim=0)     #(seq_length, 1)
 
-alphas=torch.stack(alphas, dim=0)  #(seq_length, 196, 1)
+# alphas=torch.stack(alphas, dim=0)  #(seq_length, 196, 1)
 
-outputs=torch.squeeze(outputs,dim=1) #(seq_length, nClasses)
+# outputs=torch.squeeze(outputs,dim=1) #(seq_length, nClasses)
 
-final=torch.mul(betas, outputs)      #(seq_length, nClasses)
+# final=torch.mul(betas, outputs)      #(seq_length, nClasses)
 
-final=torch.sum(final, dim=0, keepdim=True)
-print("final.size()", final.size() )
+# final=torch.sum(final, dim=0, keepdim=True)
+# print("final.size()", final.size() )
 
 
 
