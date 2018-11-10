@@ -2,7 +2,7 @@
 aws s3 cp s3://project11785/HMDB51/train_feat.hdf5 .
 aws s3 cp s3://project11785/HMDB51/train_label.hdf5 .
 
-# test, 17.2 GB, (1530, 20, 3, 224, 224)
+# test, 12.3 GB, (1530, 20, 3, 224, 224)
 aws s3 cp s3://project11785/HMDB51/test_feat.hdf5 .
 aws s3 cp s3://project11785/HMDB51/test_label.hdf5 .
 
