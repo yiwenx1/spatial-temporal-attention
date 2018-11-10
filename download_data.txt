@@ -1,11 +1,11 @@
-# training
+# training, 26.7GB, (3570, 20, 3, 224, 224)
 aws s3 cp s3://project11785/HMDB51/train_feat.hdf5 .
 aws s3 cp s3://project11785/HMDB51/train_label.hdf5 .
 
-# test
+# test, 17.2 GB, (1530, 20, 3, 224, 224)
 aws s3 cp s3://project11785/HMDB51/test_feat.hdf5 .
 aws s3 cp s3://project11785/HMDB51/test_label.hdf5 .
 
-# validation
+# validation, 12.5GB, (1666, 20, 3, 224, 224)
 aws s3 cp s3://project11785/HMDB51/val_feat.hdf5 .
 aws s3 cp s3://project11785/HMDB51/val_label.hdf5 .
