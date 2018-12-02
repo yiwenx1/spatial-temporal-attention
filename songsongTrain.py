@@ -13,8 +13,8 @@ def main():
 	myLoss = stAttentionLoss(0.1, 0.01)
 	optimizer=torch.optim.Adam(myDecoder.parameters(),lr=0.0001)
 	videos=h5py.File("train.hdf5",'r')['train_set']
-    labels=h5py.File("../train_label.hdf5", 'r')['train_label']
-    pdb.set_trace()
+	labels=h5py.File("../train_label.hdf5", 'r')['train_label']
+	pdb.set_trace()
 	# print(labels.size())
 	for i,(video,label) in enumerate(zip(videos,labels)):
 		optimizer.zero_grad()
