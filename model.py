@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+import pdb
 
 
 class stDecoder(nn.Module):
@@ -9,8 +10,13 @@ class stDecoder(nn.Module):
         self.hiddenSize=hiddenSize
         self.nLayers=nLayers
         self.nClasses=nClasses
-        self.initc=nn.Linear(512,self.hiddenSize)
-        self.inith=nn.Linear(512,self.hiddenSize)
+        # self.initc=nn.Linear(512,self.hiddenSize)
+        # self.inith=nn.Linear(512,self.hiddenSize)
+        self.h1=nn.Parameter(torch.randn(1, self.hiddenSize))
+        self.c1=nn.Parameter(torch.randn(1, self.hiddenSize))
+        self.h2=nn.Parameter(torch.randn(1, self.hiddenSize))
+        self.c2=nn.Parameter(torch.randn(1, self.hiddenSize))
+
         self.sAtten=nn.Linear(self.hiddenSize+512, 1)
         self.tAtten=nn.Linear(self.hiddenSize, 1)
         self.lstm1=nn.LSTMCell(512, self.hiddenSize)
@@ -19,50 +25,76 @@ class stDecoder(nn.Module):
         self.relu=nn.ReLU()
         self.fc=nn.Linear(self.hiddenSize,self.nClasses)
 
-    def initHidden(self,x):
-        # x is the first flattend feature rectangel of a video
-        x=x[0]
-        #print(x.size())
-        x=torch.mean(x,dim=1,keepdim=True) #(512, 1)
-        x=torch.t(x)                       #(1, 512)
-        c0=self.initc(x)                   #(1, hiddenSize)
-        h0=self.inith(x)                   #(1, hiddenSize)
-        return h0,c0
+    # def initHidden(self,x):
+    #     # x is the first flattend feature rectangel of a video
+    #     x=x[0]
+    #     #print(x.size())
+    #     x=torch.mean(x,dim=1,keepdim=True) #(512, 1)
+    #     x=torch.t(x)                       #(1, 512)
+    #     c0=self.initc(x)                   #(1, hiddenSize)
+    #     h0=self.inith(x)                   #(1, hiddenSize)
+    #     return h0,c0
 
 
-    def forward(self, x, hc1, hc2):
-        # x: (channels * pixels). (512,196)
+    def forward(self, video):
+        # x: (frames, channels * pixels). (512,196)
         # hc1 is a (h,c) of the 1st hidden layer of LSTM
         # h is hideen state, c is cell state
 
-        hidden=hc2[0]   #(1, hiddenSize)
+        h1=self.h1
+        c1=self.c1
+        h2=self.h2
+        c2=self.c2
 
-        beta=self.relu(self.tAtten( hidden ) ) 
+        hc1=(h1,c1)
+        hc2=(h2,c2)
 
-        hidden=hidden.view(-1)  # flatten hidden      
+        betas=list()
+        outputs=list()
+        alphas=list()
 
-        expandedHidden=torch.stack([hidden]*196, dim=0) #(196, hidden_size)
+        for step in range(video.shape[0]):
+            hidden=hc2[0]
+            x=torch.t(video[step]) # 196*512
 
-        sAttenInput=torch.cat((expandedHidden,torch.t(x)), dim=1)  # 196 x (hidden_size +512)
-        
-        energy=self.sAtten(sAttenInput)                      # (196, 1)
-        
-        attn_weights=F.softmax(energy,dim=0)            # (196, 1)
-        
-        attn_applied=torch.mul(attn_weights, torch.t(x)) # (196,512)
+            beta=self.relu(self.tAtten( hidden ) ) #(batchSize, 1)
+            betas.append(beta.squeeze(0))
 
-        Y=torch.sum(torch.t(attn_applied),dim=1) #(512,)
+            hidden=hidden.view(-1)  # flatten hidden
 
-        Y=torch.unsqueeze(Y,0) #(1,512)
-        
-        hc1=self.lstm1(Y,hc1)
-        hc2=self.lstm2(hc1[0], hc2)
+            expandedHidden=torch.stack([hidden]*196, dim=0) #(196, hidden_size)
 
-        output=self.tanh(hc2[0])
+            sAttenInput=torch.cat((expandedHidden, x), dim=1)  # 196 x (hidden_size +512)
 
-        output=self.fc(output)
+            sAttenInput=sAttenInput.unsqueeze(0) #(batchSize, 196, hidden_size+512)
 
-        return output, hc1, hc2, beta.view(-1), attn_weights
+            energy=self.sAtten(sAttenInput).squeeze(0)                   # (196, 1)
+
+            attn_weights=F.softmax(energy,dim=0)            # (196, 1)
+
+            alphas.append(attn_weights)
+
+            attn_applied=torch.mul(attn_weights, x) # (196,512)
+
+            Y=torch.sum(torch.t(attn_applied),dim=1) #(512,)
+
+            Y=torch.unsqueeze(Y,0) #(batchSize,512)
+            hc1=self.lstm1(Y,hc1)
+            hc2=self.lstm2(hc1[0], hc2)
+
+            output=self.tanh(hc2[0])
+            outputs.append(self.fc(output))
+
+        # pdb.set_trace()
+        alphasTensor=torch.stack(alphas, dim=0)
+        betasTensor=torch.stack(betas,dim=0)     #(seq_length, 1)
+        outputsTensor=torch.stack(outputs,dim=0) #(seq_length, 1, nClasses)
+        outputsTensor=outputsTensor.squeeze(1)
+
+        logits=torch.mul(betasTensor, outputsTensor)      #(seq_length, nClasses)
+        logits=torch.sum(logits, dim=0, keepdim=True)
+
+        return logits, alphasTensor, betasTensor
 
 
 
@@ -73,34 +105,12 @@ class stDecoder(nn.Module):
 
 # myDecoder=stDecoder(256,2,10)
 
-# x=torch.randn(512,196)
-# oneVideo=[x]*20
+# video=torch.randn(20,512,196)
 
-# hc1=myDecoder.initHidden(x)
-# hc2=hc1
+# logits, alphas, betas=myDecoder(video)
+# pdb.set_trace()
 
 
-# outputs=[]
-# betas=[]
-# alphas=[]
-# for i, x in enumerate(oneVideo):
-#     output, hc1, hc2, beta, alpha=myDecoder(x, hc1, hc2)
-#     outputs.append(output)
-#     betas.append(beta)
-#     alphas.append(alpha)
-
-# outputs=torch.stack(outputs,dim=0) #(seq_length, 1, nClasses)
-
-# betas=torch.stack(betas,dim=0)     #(seq_length, 1)
-
-# alphas=torch.stack(alphas, dim=0)  #(seq_length, 196, 1)
-
-# outputs=torch.squeeze(outputs,dim=1) #(seq_length, nClasses)
-
-# final=torch.mul(betas, outputs)      #(seq_length, nClasses)
-
-# final=torch.sum(final, dim=0, keepdim=True)
-# print("final.size()", final.size() )
 
 
 
