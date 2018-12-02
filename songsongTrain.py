@@ -20,21 +20,32 @@ def main():
     videos=h5py.File("/home/ubuntu/train_feat.hdf5",'r')['train_feat']
     labels=h5py.File("/home/ubuntu/train_label.hdf5", 'r')['train_label']
     # print(labels.size())
-    for i,(video,label) in enumerate(zip(videos,labels)):
-        optimizer.zero_grad()
+    for epoch in epochs:
 
-        video=torch.from_numpy(video)
-        video=video.to(DEVICE)
+        begin=time.time()
 
-        label=torch.tensor( np.array(label) ).long().unsqueeze(0)
-        label=label.to(DEVICE)
+        for i,(video,label) in enumerate(zip(videos,labels)):
+            optimizer.zero_grad()
 
-        logits, alphas, betas=myDecoder(video)
-        loss = myLoss(logits, label, alphas, betas)
-        loss.backward()
-        optimizer.step()
-        if (i%20==0):
-            print("video %d loss: %f" % (i, loss.cpu().detach().numpy()) )
+            video=torch.from_numpy(video)
+            video=video.to(DEVICE)
+
+            label=torch.tensor( np.array(label) ).long().unsqueeze(0)
+            label=label.to(DEVICE)
+
+            logits, alphas, betas=myDecoder(video)
+            loss = myLoss(logits, label, alphas, betas)
+            loss.backward()
+            optimizer.step()
+            if (i%20==0):
+                print("video %d loss: %f" % (i, loss.cpu().detach().numpy()) )
+
+        end=time.time()
+
+        print("Epoch %d training time: %.2fs" %(epoch,(end-begin)) )
+        fileName="params"+str(epoch)+".t7"                                                                         
+        torch.save({'enParams':encoder.state_dict(), 'deParams':decoder.state_dict()},fileName)
+        print("%s is saved." % fileName)
 
 
 
