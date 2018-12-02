@@ -57,7 +57,7 @@ class stDecoder(nn.Module):
             hidden=hc2[0]
             x=torch.t(video[step]) # 196*512
 
-            beta=self.relu(self.tAtten( hidden ) ) #(batchSize, 1)
+            beta=self.tAtten( hidden )  #(batchSize, 1)
             betas.append(beta.squeeze(0))
 
             hidden=hidden.view(-1)  # flatten hidden

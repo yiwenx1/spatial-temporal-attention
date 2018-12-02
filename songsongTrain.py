@@ -4,27 +4,37 @@ import h5py
 import torch
 import numpy as np
 import pdb
-
-
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE
 
 
 def main():
     myDecoder=stDecoder(256,2,51)
+    myDecoder=myDecoder.to(DEVICE)
+
+    print(myDecoder)
     myLoss = stAttentionLoss(0.1, 0.01)
-    optimizer=torch.optim.Adam(myDecoder.parameters(),lr=0.0001)
-    videos=h5py.File("train_feat.hdf5",'r')['train_feat']
-    labels=h5py.File("train_label.hdf5", 'r')['train_label']
+    myLoss = myLoss.to(DEVICE)
+
+    optimizer=torch.optim.Adam(myDecoder.parameters(),lr=0.001)
+    videos=h5py.File("/home/ubuntu/train_feat.hdf5",'r')['train_feat']
+    labels=h5py.File("/home/ubuntu/train_label.hdf5", 'r')['train_label']
     # print(labels.size())
     for i,(video,label) in enumerate(zip(videos,labels)):
         optimizer.zero_grad()
+
+        video=torch.from_numpy(video)
+        video=video.to(DEVICE)
+
+        label=torch.tensor( np.array(label) ).long().unsqueeze(0)
+        label=label.to(DEVICE)
+
         logits, alphas, betas=myDecoder(video)
-        print("label",label)
-        print(label.size())
-        loss = myLoss(logit, label, alphas, betas)
+        loss = myLoss(logits, label, alphas, betas)
         loss.backward()
         optimizer.step()
-                if (i%20==0):
-                    print("video %d loss: %f" % (i, loss.cpu().detach().numpy())
+        if (i%20==0):
+            print("video %d loss: %f" % (i, loss.cpu().detach().numpy()) )
 
 
 
