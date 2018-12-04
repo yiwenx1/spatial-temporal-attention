@@ -13,6 +13,8 @@ def main():
     trainFeatures=h5py.File("./data/train_feat.hdf5",'r')["train_feat"]
     trainLabels=h5py.File("./data/train_label.hdf5", 'r')['train_label']
     print("Loading is done")
+    print("trainFeatures.shape", trainFeatures.shape)
+    print("trainLabels.shape", trainLabels.shape)
 
     model=SongsongNet(512, 2, 51, 20)
     model=model.to(DEVICE)
@@ -56,6 +58,7 @@ def main():
                 print("batch %d loss is %f" %(batchID, loss.cpu().detach().numpy()))
                 train_prediction = logits.cpu().detach().argmax(dim=1)
                 train_accuracy = (train_prediction.numpy()==labels.cpu().numpy()).mean()
+                print("train_accracy is %f" % train_accuracy)
 
         end=time.time()
 
