@@ -10,7 +10,7 @@ import time
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 def main():
-    trainFeatures=h5py.File("./data/train_128.hdf5",'r')["train_128"]
+    trainFeatures=h5py.File("./data/train_feat.hdf5",'r')["train_feat"]
     trainLabels=h5py.File("./data/train_label.hdf5", 'r')['train_label']
     print("Loading is done")
 
@@ -54,7 +54,7 @@ def main():
             batchID+=1
             if batchID%20==0 :
                 print("batch %d loss is %f" %(batchID, loss.cpu().detach().numpy()))
-                train_prediction = output.cpu().detach().argmax(dim=1)
+                train_prediction = logits.cpu().detach().argmax(dim=1)
                 train_accuracy = (train_prediction.numpy()==labels.cpu().numpy()).mean()
 
         end=time.time()

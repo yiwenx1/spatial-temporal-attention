@@ -1,6 +1,7 @@
 __pycache__/
+*.t7
 *.hdf5
-.DS_Store
+*.DS_Store
 *.rar
 *.pdf
 *.npy
