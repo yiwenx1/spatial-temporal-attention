@@ -5,12 +5,13 @@ import torch.nn.functional as F
 import torch
 import pdb
 from model import stDecoder
+from loss import stAttentionLoss
 import time
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 def main():
-    trainFeatures=h5py.File("./data/train_feat.hdf5",'r')["train_feat"]
+    trainFeatures=h5py.File("./data/train_128.hdf5",'r')["train_128"]
     trainLabels=h5py.File("./data/train_label.hdf5", 'r')['train_label']
     print("Loading is done")
     print("trainFeatures.shape", trainFeatures.shape)

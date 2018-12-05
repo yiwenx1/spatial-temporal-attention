@@ -12,19 +12,19 @@ class stDecoder(nn.Module):
         self.nClasses=nClasses
         self.pixels=196
         self.channels=512
-        self.h1=nn.Parameter(torch.randn(self.batchSize, self.hiddenSize))
-        self.c1=nn.Parameter(torch.randn(self.batchSize, self.hiddenSize))
-        self.h2=nn.Parameter(torch.randn(self.batchSize, self.hiddenSize))
-        self.c2=nn.Parameter(torch.randn(self.batchSize, self.hiddenSize))
+        self.h1=nn.Parameter(torch.randn(1, self.hiddenSize))
+        self.c1=nn.Parameter(torch.randn(1, self.hiddenSize))
+        self.h2=nn.Parameter(torch.randn(1, self.hiddenSize))
+        self.c2=nn.Parameter(torch.randn(1, self.hiddenSize))
 
-        self.spatialBias=nn.Parameter(torch.randn(self.batchSize, self.pixels))
-        self.temporalBias=nn.Parameter(torch.randn(self.batchSize, 1))
+        self.spatialBias=nn.Parameter(torch.randn(1, self.pixels))
+        self.temporalBias=nn.Parameter(torch.randn(1, 1))
 
         self.h2p=nn.Linear(self.channels, self.pixels)
-        self.c2p=nn.Linear(self.channels, self.pixels)
+        self.spatialC21=nn.Linear(self.channels, 1)
 
         self.h21=nn.Linear(self.hiddenSize,1)
-        self.c21=nn.Linear(self.channels,1)
+        self.temporalC21=nn.Linear(self.channels,1)
 
         self.lstm1=nn.LSTMCell(512, self.hiddenSize)
         self.lstm2=nn.LSTMCell(self.hiddenSize,self.hiddenSize)
@@ -46,10 +46,10 @@ class stDecoder(nn.Module):
         # videos: (N, frames, channels, pixels)
         videos=videos.permute(1,0,2,3) #(frames, N, channels, pixels)
 
-        h1=self.h1
-        c1=self.c1
-        h2=self.h2
-        c2=self.c2
+        h1=self.h1.expand(self.batchSize, self.hiddenSize)
+        c1=self.c1.expand(self.batchSize, self.hiddenSize)
+        h2=self.h2.expand(self.batchSize, self.hiddenSize)
+        c2=self.c2.expand(self.batchSize, self.hiddenSize)
 
         hc1=(h1,c1)
         hc2=(h2,c2)
@@ -58,7 +58,7 @@ class stDecoder(nn.Module):
         outputs=list()
         alphas=list()
 
-        for step in range(video.shape[0]):
+        for step in range(videos.shape[0]):
             hidden=hc2[0] #(N, hiddenSize)
 
             x=videos[step].squeeze(0) #(N, channels, pixels)
@@ -66,9 +66,10 @@ class stDecoder(nn.Module):
             x=x.permute(0, 2, 1) #(N, pixels, channels)
 
             sAtten1=self.h2p(hidden) #(N, pixels)  spatial attention term1
-            sAtten2=self.c2p(x).squeeze(2) #(N, pixels) spatial attention term2
+            sAtten2=self.spatialC21(x).squeeze(2) #(N, pixels) spatial attention term2
 
-            energy=torch.add(torch.add(sAtten1, sAtten2), self.spatialBias) #(batchSize, pixels)
+            energy=torch.add(torch.add(sAtten1, sAtten2),
+                            self.spatialBias.expand(self.batchSize, self.pixels) )#(batchSize, pixels)
 
             energy=F.softmax(energy,dim=1) #(N, pixels)
 
@@ -78,11 +79,13 @@ class stDecoder(nn.Module):
 
             energy=energy.unsqueeze(1) #(N, 1, pixels)
 
-            attn_applied=torch.mul(energy, x) # (N, 1, channels)
+            attn_applied=torch.bmm(energy, x) # (N, 1, channels)
 
             Y=attn_applied.squeeze(1) #(N, channels)
 
-            beta=self.h21(hidden).squeeze(0)+self.c21(Y).squeeze(0)+self.temporalBias
+            beta=self.h21(hidden).squeeze(0)\
+                    +self.temporalC21(Y).squeeze(0)\
+                    +self.temporalBias.expand(self.batchSize, 1)
             beta=self.relu(beta)
             betas.append(beta)
 
