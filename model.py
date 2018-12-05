@@ -108,21 +108,3 @@ class stDecoder(nn.Module):
         return logits, alphasTensor, betasTensor
 
 
-
-
-
-
-##########################################
-
-# myDecoder=stDecoder(256,2,10)
-
-# video=torch.randn(20,512,196)
-
-# logits, alphas, betas=myDecoder(video)
-# pdb.set_trace()
-
-
-
-
-
-
