@@ -10,9 +10,25 @@ import time
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
+def val(model, valFeatures, valLabelsi, batchSize):
+    model.eval()
+    batches=valFeatures.shape[0]//batchSize
+    acc=0
+    for i in range(batches):
+        videos=valFeatures[ i*batchSize : (i+1)*batchSize ]
+        labels=valLabels[ i*batchSize : (i+1)*batchSize ]
+        logits=model(videos)
+        prediction = logits.cpu().detach().argmax(dim=1)
+        accuracy = (train_prediction.numpy()==labels.cpu().numpy()).mean()
+        acc+=accuracy
+    print("Val accuracy %f", acc/batches)
+
+
 def main():
     trainFeatures=h5py.File("./data/train_feat.hdf5",'r')["train_feat"]
     trainLabels=h5py.File("./data/train_label.hdf5", 'r')['train_label']
+    valFeatures=h5py.File("./data/val_feat.hdf5",'r')['val_feat']
+    valLabels=h5py.File("./data/val_label.hdf5", 'r')['val_label']
     print("Loading is done")
     print("trainFeatures.shape", trainFeatures.shape)
     print("trainLabels.shape", trainLabels.shape)
@@ -38,6 +54,7 @@ def main():
         begin=time.time()
 
         for j in range(batches):
+            model.train()
 
             optimizer.zero_grad()
 
@@ -53,7 +70,7 @@ def main():
             logits, alphas, betas=model(videos)
 
             #print("alphas", alphas)
-            print("betas", betas[0])
+            #print("betas", betas[0])
             #print("logits", logits)
             #print("labels", labels)
 

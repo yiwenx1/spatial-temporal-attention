@@ -17,16 +17,16 @@ class stDecoder(nn.Module):
         self.h2=nn.Parameter(torch.randn(1, self.hiddenSize))
         self.c2=nn.Parameter(torch.randn(1, self.hiddenSize))
 
-        self.spatialBias=nn.Parameter(torch.randn(1, self.pixels))
-        self.temporalBias=nn.Parameter(torch.randn(1, 1))
+        self.spatialBias=nn.Parameter(torch.zeros(1, self.pixels))
+        self.temporalBias=nn.Parameter(torch.zeros(1, 1))
 
-        self.h2p=nn.Linear(self.channels, self.pixels)
+        self.h2p=nn.Linear(self.hiddenSize, self.pixels)
         self.spatialC21=nn.Linear(self.channels, 1)
 
         self.h21=nn.Linear(self.hiddenSize,1)
         self.temporalC21=nn.Linear(self.channels,1)
 
-        self.lstm1=nn.LSTMCell(512, self.hiddenSize)
+        self.lstm1=nn.LSTMCell(self.channels, self.hiddenSize)
         self.lstm2=nn.LSTMCell(self.hiddenSize,self.hiddenSize)
         self.relu=nn.ReLU()
         self.fc=nn.Linear(self.hiddenSize,self.nClasses)
@@ -73,7 +73,7 @@ class stDecoder(nn.Module):
 
             energy=F.softmax(energy,dim=1) #(N, pixels)
 
-            energy=F.normalize(energy,dim=1, p=1)
+            #energy=F.normalize(energy,dim=1, p=1)
 
             alphas.append(energy)
 
@@ -86,7 +86,7 @@ class stDecoder(nn.Module):
             beta=self.h21(hidden).squeeze(0)\
                     +self.temporalC21(Y).squeeze(0)\
                     +self.temporalBias.expand(self.batchSize, 1)
-            beta=self.relu(beta)
+            #beta=self.relu(beta)
             betas.append(beta)
 
             hc1=self.lstm1(Y,hc1)
@@ -99,6 +99,7 @@ class stDecoder(nn.Module):
 
         betasTensor=torch.stack(betas,dim=0)     #(seq_length, N, 1)
         betasTensor=betasTensor.permute(1, 2, 0)  #(N, 1, seqLength)
+        betasTensor=F.softmax(betasTensor, dim=2)
 
         outputsTensor=torch.stack(outputs,dim=0) #(seq_length, N, nClasses)
         outputsTensor=outputsTensor.permute(1, 0, 2) #(N, seqLength, nClasses)
