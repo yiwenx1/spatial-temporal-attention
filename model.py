@@ -95,14 +95,15 @@ class stDecoder(nn.Module):
             output=self.fc(hc2[0]) #(N, nClasses)
             outputs.append(output)
 
-        # pdb.set_trace()
-        alphasTensor=torch.stack(alphas, dim=0)
-        betasTensor=torch.stack(betas,dim=0)     #(seq_length, 1)
-        outputsTensor=torch.stack(outputs,dim=0) #(seq_length, 1, nClasses)
-        outputsTensor=outputsTensor.squeeze(1)
+        alphasTensor=torch.stack(alphas, dim=0) #(seqLength, N, pixels)
 
-        logits=torch.bmm(betasTensor, outputsTensor)      #(seq_length, nClasses)
-        logits=torch.sum(logits, dim=0, keepdim=True)
+        betasTensor=torch.stack(betas,dim=0)     #(seq_length, N, 1)
+        betasTensor=betasTensor.permute(1, 2, 0)  #(N, 1, seqLength)
+
+        outputsTensor=torch.stack(outputs,dim=0) #(seq_length, N, nClasses)
+        outputsTensor=outputsTensor.permute(1, 0, 2) #(N, seqLength, nClasses)
+
+        logits=torch.bmm(betasTensor, outputsTensor).squeeze(1)      #(N, nClasses)
 
         return logits, alphasTensor, betasTensor
 

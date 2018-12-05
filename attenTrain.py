@@ -20,7 +20,8 @@ def main():
     model=stDecoder(64, 512, 51)
     model=model.to(DEVICE)
 
-    criterion = stAttentionLoss(0.1, 0.01)
+    #criterion = stAttentionLoss(0.1, 0.01)
+    criterion =nn.CrossEntropyLoss()
     criterion=criterion.to(DEVICE)
 
     optimizer=torch.optim.Adam(model.parameters())
@@ -46,9 +47,9 @@ def main():
             labels=torch.from_numpy(trainLabels[(j*batchSize):(j+1)*batchSize]).long()
             labels=labels.to(DEVICE)
 
-            logits=model(videos)
+            logits,_ ,_=model(videos)
 
-            loss = myLoss(logits, label, alphas, betas)
+            loss = criterion(logits, labels)
 
             loss.backward()
 
