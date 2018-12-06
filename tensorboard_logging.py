@@ -5,7 +5,7 @@ License: Copyleft
 __author__ = "Michael Gygli"
 
 import tensorflow as tf
-from StringIO import StringIO
+from io import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -51,14 +51,14 @@ class Logger(object):
         # Create and write Summary
         summary = tf.Summary(value=im_summaries)
         self.writer.add_summary(summary, step)
-        
+
 
     def log_histogram(self, tag, values, step, bins=1000):
         """Logs the histogram of a list/vector of values."""
         # Convert to a numpy array
         values = np.array(values)
-        
-        # Create histogram using numpy        
+
+        # Create histogram using numpy
         counts, bin_edges = np.histogram(values, bins=bins)
 
         # Fill fields of histogram proto
