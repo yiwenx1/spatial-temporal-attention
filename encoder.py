@@ -69,8 +69,9 @@ def read_video_file(filename):
     duration = cap.get(cv2.CAP_PROP_POS_MSEC) # duration of the video
     # set the current position to the start of the video.
     cap.set(cv2.CAP_PROP_POS_AVI_RATIO, 0)
-
-    cap.set(cv2.CAP_PROP_FPS, 20) # set frame per second.
+    default_fps = 30
+    num_frame = 20
+    
     frame_count = int(duration / 1000 * 20)
     video = np.zeros((frame_count, 224, 224, 3), dtype='uint8')
     count = 0
@@ -106,29 +107,32 @@ def save_video_file(pathname):
     pass
 
 def main():
-    directory_list = ['./data/hmdb51/ride_bike/',
-                      '.data/hmdb51/ride_horse/',
-                      './data/hmdb51/run/',
-                      './data/hmdb51/shake_hands/',
-                      './data/hmdb51/shoot_ball/',
-                      './data/hmdb51/shoot_bow/',
-                      './data/hmdb51/shoot_gun/',
-                      './data/hmdb51/sit/',
-                      './data/hmdb51/situp/',
-                      './data/hmdb51/smile/',
-                      './data/hmdb51/smoke/',
-                      './data/hmdb51/somersault/',
-                      './data/hmdb51/stand/',
-                      './data/hmdb51/swing_baseball/',
-                      './data/hmdb51/sword/',
-                      './data/hmdb51/sword_exercise/',
-                      './data/hmdb51/talk/',
-                      './data/hmdb51/throw/',
-                      './data/hmdb51/turn/',
-                      './data/hmdb51/walk/',
-                      './data/hmdb51/wave/']
+    directory_list = ['./data/hmdb51/ride_bike/']
+    # directory_list = ['./data/hmdb51/ride_bike/',
+    #                   '.data/hmdb51/ride_horse/',
+    #                   './data/hmdb51/run/',
+    #                   './data/hmdb51/shake_hands/',
+    #                   './data/hmdb51/shoot_ball/',
+    #                   './data/hmdb51/shoot_bow/',
+    #                   './data/hmdb51/shoot_gun/',
+    #                   './data/hmdb51/sit/',
+    #                   './data/hmdb51/situp/',
+    #                   './data/hmdb51/smile/',
+    #                   './data/hmdb51/smoke/',
+    #                   './data/hmdb51/somersault/',
+    #                   './data/hmdb51/stand/',
+    #                   './data/hmdb51/swing_baseball/',
+    #                   './data/hmdb51/sword/',
+    #                   './data/hmdb51/sword_exercise/',
+    #                   './data/hmdb51/talk/',
+    #                   './data/hmdb51/throw/',
+    #                   './data/hmdb51/turn/',
+    #                   './data/hmdb51/walk/',
+    #                   './data/hmdb51/wave/']
     for directory in directory_list:
         file_list = os.listdir(directory)
+        file_list = file_list[:1]
+        print(file_list)
         for video_file in file_list:
             video_file = directory + video_file
             frames = read_video_file(video_file)
