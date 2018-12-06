@@ -93,7 +93,7 @@ def main():
             optimizer.step()
 
             batchID+=1
-            if batchID%4==0 :
+            if batchID%2 ==0 :
                 print("batch %d loss is %f" %(batchID, loss.cpu().detach().numpy()))
                 train_prediction = logits.cpu().detach().argmax(dim=1)
                 train_accuracy = (train_prediction.numpy()==labels.cpu().numpy()).mean()
