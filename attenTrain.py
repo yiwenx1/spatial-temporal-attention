@@ -48,8 +48,8 @@ def main():
     model=stDecoder(batchSize, 512, 51)
     model=model.to(DEVICE)
 
-    #criterion = stAttentionLoss(0.1, 0.01)
-    criterion =nn.CrossEntropyLoss()
+    criterion = stAttentionLoss(0.1, 0.01)
+    #criterion =nn.CrossEntropyLoss()
     criterion=criterion.to(DEVICE)
 
     optimizer=torch.optim.Adam(model.parameters())
@@ -86,14 +86,15 @@ def main():
             #print("logits", logits)
             #print("labels", labels)
 
-            loss = criterion(logits, labels)
+            #loss = criterion(logits, labels)
+            loss = criterion(logits, labels, alphas, betas)
 
             loss.backward()
 
             optimizer.step()
 
             batchID+=1
-            if batchID%2 ==0 :
+            if batchID%20 ==0 :
                 print("batch %d loss is %f" %(batchID, loss.cpu().detach().numpy()))
                 train_prediction = logits.cpu().detach().argmax(dim=1)
                 train_accuracy = (train_prediction.numpy()==labels.cpu().numpy()).mean()

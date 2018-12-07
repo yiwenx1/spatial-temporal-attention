@@ -45,7 +45,7 @@ class stDecoder(nn.Module):
         self.lstm1B=nn.LSTMCell(self.channels, self.hiddenSize)
         self.lstm2B=nn.LSTMCell(self.hiddenSize,self.hiddenSize)
 
-        
+
         self.fc=nn.Linear(self.hiddenSize*2,self.nClasses)
 
         self.relu=nn.ReLU()
@@ -115,13 +115,13 @@ class stDecoder(nn.Module):
             YF=attn_appliedF.squeeze(1) #(N, channels)
 
             betaF=self.h21F(hiddenF).squeeze(0)\
-                    +self.temporalC21F(Y).squeeze(0)\
+                    +self.temporalC21F(YF).squeeze(0)\
                     +self.temporalBiasF.expand(self.batchSize, 1)
             #beta=self.relu(beta)
             betasF.append(betaF)
 
-            hc1F=self.lstm1(YF,hc1F)
-            hc2F=self.lstm2(hc1F[0], hc2F)
+            hc1F=self.lstm1F(YF,hc1F)
+            hc2F=self.lstm2F(hc1F[0], hc2F)
 
             outputsF.append(hc2F[0])
 
@@ -142,7 +142,7 @@ class stDecoder(nn.Module):
 
             #energy=F.normalize(energy,dim=1, p=1)
 
-            alphasB.append(energyB)
+            alphasB.insert(0, energyB)
 
             energyB=energyB.unsqueeze(1) #(N, 1, pixels)
 
@@ -151,21 +151,21 @@ class stDecoder(nn.Module):
             YB=attn_appliedB.squeeze(1) #(N, channels)
 
             betaB=self.h21B(hiddenB).squeeze(0)\
-                    +self.temporalC21B(Y).squeeze(0)\
+                    +self.temporalC21B(YB).squeeze(0)\
                     +self.temporalBiasB.expand(self.batchSize, 1)
             #beta=self.relu(beta)
-            betasB.append(betaB)
+            betasB.insert(0, betaB)
 
-            hc1B=self.lstm1(YB,hc1B)
-            hc2B=self.lstm2(hc1B[0], hc2B)
+            hc1B=self.lstm1B(YB,hc1B)
+            hc2B=self.lstm2B(hc1B[0], hc2B)
 
-            outputsB.append(hc2B[0])
+            outputsB.insert(0, hc2B[0])
 
         outputs=list()
         alphas=list()
         betas=list()
 
-        outputs=[torch.cat(oF, oB) for oF,oB in zip(outputsF, outputsB)]
+        outputs=[torch.cat( (oF, oB), dim=1) for oF,oB in zip(outputsF, outputsB)]
         outputs=[self.fc(o) for o in outputs]
 
         alphas=[torch.add(aF, aB) for aF, aB in zip(alphasF, alphasB)]
@@ -182,6 +182,6 @@ class stDecoder(nn.Module):
 
         logits=torch.bmm(betasTensor, outputsTensor).squeeze(1)      #(N, nClasses)
 
-        return logits, alphasTensor, betasTensor
+        return logits, alphasTensor.permute(1,0,2), betasTensor.permute(0,2,1)
 
 

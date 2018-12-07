@@ -106,6 +106,6 @@ class stDecoder(nn.Module):
 
         logits=torch.bmm(betasTensor, outputsTensor).squeeze(1)      #(N, nClasses)
 
-        return logits, alphasTensor, betasTensor
+        return logits, alphasTensor.permute(1,0,2), betasTensor.permute(0,2,1)
 
 
