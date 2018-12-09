@@ -35,7 +35,8 @@ class stAttentionLoss(nn.Module):
         penalty_1 = self.lambda_1 * torch.sum(1 - torch.sum(alpha,dim = 1), dim = 1)
         
         beta_norm = torch.abs(beta) # Here should be norm |beta_{t}| #(batch_size, seq_length)
-        penalty_2 = self.lambda_1 * torch.sum(beta_norm,dim = 1) # Here should be summing over dim=0
+
+        penalty_2 = self.lambda_2 * torch.sqrt(torch.sum(torch.pow(beta_norm,2),dim = 1)) # Here should be summing over dim=0
 
         penalty_2 = torch.squeeze(penalty_2,dim = 1)
 
@@ -102,7 +103,7 @@ class stAttentionLoss(nn.Module):
 # print(betas.size())
 
 
-###########################################
+# ##########################################
 
 # myLoss = stAttentionLoss(0.1, 0.01)
 # loss = myLoss(input, label, attn_weights, betas)
