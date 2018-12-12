@@ -29,7 +29,9 @@ def val(model, valFeatures, valLabels, batchSize):
         prediction = logits.cpu().detach().argmax(dim=1)
         accuracy = (prediction.numpy()==labels.cpu().numpy()).mean()
         acc+=accuracy
-    print("Val accuracy: ", acc/batches)
+    valAccuracy=acc/batches
+    print("Val accuracy: ", valAccuracy)
+    return valAccuracy
 
 
 def main():
@@ -56,7 +58,7 @@ def main():
 
     indexList=list(range(trainFeatures.shape[0]))
     batches=trainFeatures.shape[0]//batchSize
-    epochs=20
+    epochs=50
     batchID=0
 
     val(model, valFeatures, valLabels, batchSize)
@@ -99,14 +101,17 @@ def main():
                 train_prediction = logits.cpu().detach().argmax(dim=1)
                 train_accuracy = (train_prediction.numpy()==labels.cpu().numpy()).mean()
                 print("train_accracy is %f" % train_accuracy)
-                tr_info = { 'loss': loss.cpu().detach().numpy(), 'accuracy': train_accuracy }
+                tr_info = { 'Train Loss': loss.cpu().detach().numpy(), 'Train Accuracy': train_accuracy }
                 for tag, value in tr_info.items():
                     tLog.log_scalar(tag, value, batchID+1)
 
         end=time.time()
 
         print("Epoch %d training time: %.2fs" %(epoch,(end-begin)) )
-        val(model, valFeatures, valLabels, batchSize)
+        valAcc=val(model, valFeatures, valLabels, batchSize)
+        val_info= {"Validation Accuracy": valAcc}
+        for tag, value in val_info.items():
+            tLog.log_scalar(tag, value, epoch+1)
         #fileName="params"+str(epoch)+".t7"
         #torch.save(model.state_dict(),fileName)
         #print("%s is saved." % fileName)
