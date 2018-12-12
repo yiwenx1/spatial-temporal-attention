@@ -71,18 +71,27 @@ def read_video_file(filename):
     cap.set(cv2.CAP_PROP_POS_AVI_RATIO, 0)
     default_fps = 30
     num_frame = 20
+    num_total_frame = duration / 1000 * 30
+    sample_bin = num_total_frame // num_frame
     
-    frame_count = int(duration / 1000 * 20)
-    video = np.zeros((frame_count, 224, 224, 3), dtype='uint8')
-    count = 0
-    while cap.isOpened() and count < frame_count:
+    video = np.zeros((num_frame, 224, 224, 3), dtype='uint8')
+    count = 1
+    # while cap.isOpened() and count < frame_count:
+    while True:
         ret, frame = cap.read() # ret = 1 if the video is captured
-        if ret is True:
+        if ret == False:
+            break
+        if count % sample_bin == 0:
             frame = cv2.resize(frame, (224, 224), interpolation=cv2.INTER_CUBIC)
-            video[count] = frame # The dimension of each frame is [height, width, 3]
-            # cv2.imshow('image', frame)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+            index = int(count // sample_bin) - 1
+            if index < num_frame:
+                video[index] = frame # The dimension of each frame is [height, width, 3]
+            cv2.imshow('image', frame)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            name = str(index) + '.png'
+            cv2.imwrite(name, frame)
+
         count += 1
     video = np.transpose(video, (0,3,1,2))
     return video # The dimension of video is [frame_count, 3, frame_height, frame_width]
@@ -141,8 +150,8 @@ def main():
 
 
 if __name__ == '__main__':
-    # filename = "./data/hmdb51/smile/A_Beautiful_Mind_2_smile_h_nm_np1_fr_goo_2.avi"
-    # frames = read_video_file(filename)
+    filename = "./data/hmdb51/swing_baseball/practicingmybaseballswing2009_swing_baseball_f_cm_np1_fr_med_14.avi"
+    frames = read_video_file(filename)
     # print("number of frames", frames.shape)
 
     # model = vgg19()
@@ -155,4 +164,4 @@ if __name__ == '__main__':
     # print(outputs.size())
 
     # print(os.listdir("./data/hmdb51/"))
-    main()
+    # main()

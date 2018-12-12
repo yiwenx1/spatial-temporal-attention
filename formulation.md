@@ -1,12 +1,12 @@
 $X_t = [x_{t,1}, x_{t,2}, ..., x_{t,i}, ..., x_{t,196}]$
 
-$e_{t, i}^s = W_h^s \times h_{t-1} + W_x \times X_t + b$
+$e_{t, i}^s = W_h^s \times h_{t-1} + W_x \times X_t + b_s$
 
 $\alpha_{t, i} =\frac{exp(e_{t,i}^{s})}{\sum_{j=1}^{L^2}exp(e_{t, j}^{s})}$
 
 $Y_t = \sum_{i=1}^{L^2}\alpha_{t, i}x_{t,i}$
 
-$e_{t,i}^t = W_h^t \times h_{t-1} + W_y \times Y_t +b$
+$e_{t,i}^t = W_h^t \times h_{t-1} + W_y \times Y_t +b_t$
 
 $\beta_{t}=\frac{exp(e_{t,i}^t)}{\sum_{j=1}^{L^2}exp(e_{t, j}^t)}$
 
