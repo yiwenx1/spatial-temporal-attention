@@ -66,32 +66,36 @@ def read_video_file(filename):
     # set the current position to the end of the video.
     cap.set(cv2.CAP_PROP_POS_AVI_RATIO, 1)
     # current position of the video in milliseconds.
-    duration = cap.get(cv2.CAP_PROP_POS_MSEC) # duration of the video
+    duration = cap.get(cv2.CAP_PROP_POS_MSEC) # duration of the video(ms)
     # set the current position to the start of the video.
     cap.set(cv2.CAP_PROP_POS_AVI_RATIO, 0)
-    default_fps = 30
-    num_frame = 20
+    # cap.set(cv2.CAP_PROP_FPS, 40) # does work, default fps remains 30
+    DEFAULT_FPS = 30
+    NUM_FRAME = 20
     num_total_frame = duration / 1000 * 30
-    sample_bin = num_total_frame // num_frame
-    
-    video = np.zeros((num_frame, 224, 224, 3), dtype='uint8')
+    sample_bin = num_total_frame // NUM_FRAME
+    video = np.zeros((NUM_FRAME, 224, 224, 3), dtype='uint8')
     count = 1
+    if sample_bin == 0:
+        print(filename)
     # while cap.isOpened() and count < frame_count:
     while True:
         ret, frame = cap.read() # ret = 1 if the video is captured
         if ret == False:
             break
-        if count % sample_bin == 0:
+        if sample_bin == 0:
+            frame = cv2.resize(frame, (224, 224), interpolation=cv2.INTER_CUBIC)
+            index = count - 1
+            video[index] = frame
+        elif count % sample_bin == 0:
             frame = cv2.resize(frame, (224, 224), interpolation=cv2.INTER_CUBIC)
             index = int(count // sample_bin) - 1
-            if index < num_frame:
+            if index < NUM_FRAME:
                 video[index] = frame # The dimension of each frame is [height, width, 3]
-            cv2.imshow('image', frame)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            name = str(index) + '.png'
-            cv2.imwrite(name, frame)
-
+                cv2.imshow('image', frame)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+                cv2.imwrite(str(index)+'.png', frame)
         count += 1
     video = np.transpose(video, (0,3,1,2))
     return video # The dimension of video is [frame_count, 3, frame_height, frame_width]
